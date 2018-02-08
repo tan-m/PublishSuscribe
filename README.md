@@ -1,5 +1,10 @@
 # PublishSuscribe
 
+Usage:
+
+java StartServer
+java Client <ip address>
+
 Project 1 CSci 5105 - Implementing Publish Subscribe system.
 Team Members:
  - Tanmay Mehta: mehta206@umn.edu
