@@ -3,17 +3,21 @@ import java.io.*;
 
 class UDPServer {
 
-  private InetAddress address;
-  private DatagramSocket socket;
-  private  DatagramPacket packet;
-  private byte[] buf = new byte[1024];
   private int port;
+  private InetAddress address   = null;
+  private DatagramSocket socket = null;
+  private DatagramPacket packet = null;
+  private byte[] buf;
 
   // Constructor call, creates the Sample Server Port
-  public UDPServer(int port) throws SocketException, UnknownHostException {
+  public UDPServer(int port) {
     this.port = port;
-    socket = new DatagramSocket();
-    address = InetAddress.getLocalHost();
+    try{
+      socket = new DatagramSocket(port);
+      address = InetAddress.getLocalHost();
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
   }
 
   /*
@@ -24,7 +28,7 @@ class UDPServer {
    */
   public void register(InetAddress rsIP, int rsPort)
   {
-    String msg = "Register;RMI;"+address.toString()+";"+port+";TAG;;";
+    String msg = "Register;RMI;"+address.getHostAddress()+";"+port+";TAG;1099;";
     buf = msg.getBytes();
     packet = new DatagramPacket(buf, buf.length, rsIP, rsPort);
     try {
@@ -51,7 +55,7 @@ class UDPServer {
    */
   public void getList(InetAddress rsIP, int rsPort) 
   { 
-    String msg = "GetList;RMI;"+address.toString()+";"+port;
+    String msg = "GetList;RMI;"+address.getHostAddress()+";"+port;
     buf = msg.getBytes();
     packet = new DatagramPacket(buf, buf.length, rsIP, rsPort);
     try {
@@ -76,13 +80,14 @@ class UDPServer {
    * receiving the HB.
    */
   public void listenHeartBeat() {
+    byte[] buf = new byte[1024];
     packet = new DatagramPacket(buf, buf.length);
     try {
+      socket = new DatagramSocket(5105);
       socket.receive(packet);
     } catch(IOException e) {
       e.printStackTrace();
     }
-    System.out.println("Listening");
     String received = new String(packet.getData(), 0, packet.getLength());
     System.out.println(received);
   }
