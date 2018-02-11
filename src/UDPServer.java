@@ -1,13 +1,14 @@
 import java.net.*;
 import java.io.*;
 
-class UDPServer {
+class UDPServer extends Thread {
 
   private int port;
   private InetAddress address   = null;
   private DatagramSocket socket = null;
   private DatagramPacket packet = null;
   private byte[] buf;
+  boolean runnable = false;
 
   // Constructor call, creates the Sample Server Port
   public UDPServer(int port) {
@@ -26,17 +27,28 @@ class UDPServer {
    * port to connect. The register function builds the string -
    * “Register;RMI;IP;Port;BindingName;Port for RMI”
    */
-  public void register(InetAddress rsIP, int rsPort)
+  public void register(InetAddress rsHost, int rsPort)
   {
-    String msg = "Register;RMI;"+address.getHostAddress()+";"+port+";TAG;1099;";
+    String msg = "Register;RMI;"+address.getHostAddress()+";"+port+";TAG;";
     buf = msg.getBytes();
-    packet = new DatagramPacket(buf, buf.length, rsIP, rsPort);
+    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
     try {
       socket.send(packet);
     } catch (Exception e) {
       e.printStackTrace();
     }
-    listenHeartBeat();
+    
+    runnable = true;
+    Thread hbThread = new Thread("Heartbeat Thread") {
+      public void run() {
+        listenHeartBeat();
+      }
+    };
+
+    if (runnable) {
+      hbThread.setPriority(Thread.MAX_PRIORITY);
+      hbThread.start();
+    } 
   }
 
   /*
@@ -44,8 +56,17 @@ class UDPServer {
    * Takes a String argument consisting of 
    * “Deregister;RMI;IP;Port”
    */
-  public void deregister() {
-
+  public void deregister(InetAddress rsHost, int rsPort) {
+    String msg = "Deregister;RMI;"+address.getHostAddress()+";"+port+";";
+    buf = msg.getBytes();
+    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
+    try {
+      socket.send(packet);
+      runnable = false;
+      System.out.println("Deregistering the server from the Registry Server");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   /*
@@ -53,17 +74,18 @@ class UDPServer {
    * registry server. The return argument can be assumed to be less than 1024 B
    * “GetList;RMI;IP;Port"
    */
-  public void getList(InetAddress rsIP, int rsPort) 
+  public void getList(InetAddress rsHost, int rsPort) 
   { 
     String msg = "GetList;RMI;"+address.getHostAddress()+";"+port;
     buf = msg.getBytes();
-    packet = new DatagramPacket(buf, buf.length, rsIP, rsPort);
+    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
     try {
       socket.send(packet);
     } catch (Exception e) {
       e.printStackTrace();
     }
     // try listening to the List of servers connected to the Registry Server.
+    buf = new byte[1024];
     packet = new DatagramPacket(buf, buf.length);
     try {
       socket.receive(packet);
@@ -71,7 +93,7 @@ class UDPServer {
       e.printStackTrace();
     }
     msg = new String(packet.getData(), 0, packet.getLength());
-    System.out.println(msg);
+    System.out.println("List of servers online are: " + msg);
   }
 
   /*
@@ -80,36 +102,22 @@ class UDPServer {
    * receiving the HB.
    */
   public void listenHeartBeat() {
-    byte[] buf = new byte[1024];
-    packet = new DatagramPacket(buf, buf.length);
-    try {
-      socket = new DatagramSocket(5105);
-      socket.receive(packet);
-    } catch(IOException e) {
-      e.printStackTrace();
-    }
-    String received = new String(packet.getData(), 0, packet.getLength());
-    System.out.println(received);
+    // try receiving data from the server
+    buf = new byte[1024];
+    while(runnable) {
+      DatagramPacket request = new DatagramPacket(buf, buf.length);
+      try {
+        System.out.println("Listen to the heartbeat");
+        socket.receive(request);
+        DatagramPacket reply = new DatagramPacket(request.getData(),
+                    request.getLength(), request.getAddress(), request.getPort());
+        socket.send(reply);
+        Thread.sleep(3900);
+      } catch(Exception e) {
+        e.printStackTrace();
+      }
+    } // end the while loop
   }
-}
 
+} // End of the UDPServer class
 
-    /*
-    DatagramPacket packet = new DatagramPacket(buf, buf.length);
-    try {
-      socket.receive(packet);
-    } catch(IOException e) {
-      e.printStackTrace();
-    }
-
-    InetAddress address = packet.getAddress();
-    int port = packet.getPort();
-    packet = new DatagramPacket(buf, buf.length, address, port);
-    String received = new String(packet.getData(), 0, packet.getLength());
-
-    try {
-      socket.send(packet);
-    } catch (IOException e) {
-        System.out.println("Failed receiving data");
-    }
-    */

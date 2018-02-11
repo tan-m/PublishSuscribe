@@ -4,9 +4,17 @@ import java.net.*;
 public class TestClass {
   public static void main( String args[]) throws SocketException,
   UnknownHostException {
-    System.out.println("Starting the program");
-    UDPServer us = new UDPServer(4445);
-    us.register(InetAddress.getByName("128.107.35.147"),5104);
-    //us.getList(InetAddress.getByName("128.101.35.147"),5105);
+  
+    System.out.println("Running on the local host with port 5104");
+    UDPServer us = new UDPServer(2304);
+   
+    us.register(InetAddress.getByName("localhost"),5104);
+    us.getList(InetAddress.getByName("localhost"),5104);
+    us.deregister(InetAddress.getByName("localhost"),5104);
+  
+    System.out.println("\nRunning on the main server");
+    us.register(InetAddress.getByName("dio.cs.umn.edu"), 5105);
+    us.getList(InetAddress.getByName("dio.cs.umn.edu"), 5105);
+    us.deregister(InetAddress.getByName("dio.cs.umn.edu"), 5105);
   }
 }

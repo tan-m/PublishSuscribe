@@ -7,11 +7,15 @@ class SampleTest {
     try {
       DatagramSocket socket = new DatagramSocket();
       InetAddress address = InetAddress.getLocalHost();
-      String msg = "Register;RMI;";
+      String msg = "Register;RMI;"+address.getHostAddress()+";2304;TAG;";
       byte[] buf = msg.getBytes();
-      System.out.println(socket.getPort());
-      DatagramPacket packet = new DatagramPacket(buf, buf.length,address, 5104);
+      DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 5104);
       socket.send(packet);
+      while (true) {
+        DatagramPacket request = new DatagramPacket(buf, buf.length);
+        socket.receive(request);
+        System.out.println(request.toString());
+      }
     } catch(Exception e) {
       e.printStackTrace();
     }
