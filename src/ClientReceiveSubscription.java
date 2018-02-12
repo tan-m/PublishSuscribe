@@ -5,11 +5,15 @@ import java.net.SocketException;
 
 public class ClientReceiveSubscription extends Thread {
 
+    int port;
+    ClientReceiveSubscription(int port) {
+        this.port = port;
+    }
 
     public void run() {
         DatagramSocket socket = null;
         try {
-            socket = new DatagramSocket(4000);
+            socket = new DatagramSocket(port);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -26,6 +30,5 @@ public class ClientReceiveSubscription extends Thread {
             String received = new String(packet.getData(), 0, packet.getLength());
             System.out.println("Article received: " + received);
         }
-
     }
 }
