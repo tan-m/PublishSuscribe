@@ -9,7 +9,9 @@ CLASSES = \
 	GroupServer.java \
 	GroupServerImpl.java \
 	StartServer.java \
-	Client.java
+	Client.java \
+	UDPServer.java \
+	TestClass.java
 
 default: classes
 
@@ -17,3 +19,4 @@ classes: $(CLASSES:.java=.class)
 
 clean: 
 	$(RM) *.class
+

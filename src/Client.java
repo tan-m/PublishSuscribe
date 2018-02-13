@@ -11,7 +11,6 @@ public class Client {
             // host/args[0] is the registry location
             GroupServer gs = (GroupServer) Naming.lookup ("//"+ args[0] + ":5000" + "/GroupServer");
 
-
             String ip = "127.0.0.1";
             int port = Integer.parseInt(args[1]);
 

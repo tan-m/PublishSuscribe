@@ -10,7 +10,9 @@ public class DispatchArticles implements Runnable {
     ArticleInfo articleInfo;
     String articleContent;
 
-    public DispatchArticles(Set<IP_And_Port> clientList, Map<ArticleInfo, Set<IP_And_Port>> subcribeMap, ArticleInfo articleInfo, String articleContent) {
+    public DispatchArticles(Set<IP_And_Port> clientList, Map<ArticleInfo, 
+                            Set<IP_And_Port>> subcribeMap, ArticleInfo articleInfo,
+                            String articleContent) {
         this.clientList = clientList;
         this.subcribeMap = subcribeMap;
         this.articleInfo = articleInfo;

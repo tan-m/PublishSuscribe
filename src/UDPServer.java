@@ -8,7 +8,7 @@ class UDPServer extends Thread {
   private DatagramSocket socket = null;
   private DatagramPacket packet = null;
   private byte[] buf;
-  boolean runnable = false;
+  volatile boolean runnable = false;
 
   // Constructor call, creates the Sample Server Port
   public UDPServer(int port) {
@@ -103,16 +103,18 @@ class UDPServer extends Thread {
    */
   public void listenHeartBeat() {
     // try receiving data from the server
-    buf = new byte[1024];
     while(runnable) {
-      DatagramPacket request = new DatagramPacket(buf, buf.length);
+      buf = new byte[1024];
       try {
+        Thread.sleep(3500);
+        if (!runnable)
+          break;
         System.out.println("Listen to the heartbeat");
+        DatagramPacket request = new DatagramPacket(buf, buf.length);
         socket.receive(request);
         DatagramPacket reply = new DatagramPacket(request.getData(),
                     request.getLength(), request.getAddress(), request.getPort());
         socket.send(reply);
-        Thread.sleep(3900);
       } catch(Exception e) {
         e.printStackTrace();
       }
