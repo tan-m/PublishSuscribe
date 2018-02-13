@@ -1,0 +1,6 @@
+To perform section 4 tasks:
+- To start running the google pubsub server run the following:
+gcloud beta emulators pubsub start --host-port=csel-kh4250-35.cselabs.umn.edu:46839 &
+- To run the go programs - go build [pgm].go && go run [pgm].go
+- Build a client.go file - already provided and use the PubSub API calls to call the 
+respective functions made available 
