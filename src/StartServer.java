@@ -2,14 +2,22 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.net.*;
 
 public class StartServer {
     public static void main (String args[]) throws Exception {
-        GroupServer groupServer = new GroupServerImpl();
+
+        GroupServerImpl groupServer = new GroupServerImpl(InetAddress.getByName("localhost"), 5104,2304);
+        groupServer.getList(InetAddress.getByName("localhost"), 5104);
+        groupServer.deregister(InetAddress.getByName("localhost"), 5104);
         System.out.println("server started");
 //        Naming.bind("GroupServer", groupServer);
 
+        System.out.println("\nRunning on the main server");
+        GroupServerImpl groupServer1 = new GroupServerImpl(InetAddress.getByName("dio.cs.umn.edu"),5105,2304);
+        groupServer1.getList(InetAddress.getByName("dio.cs.umn.edu"), 5105);
+        groupServer1.deregister(InetAddress.getByName("dio.cs.umn.edu"), 5105);
         Registry localRegistry = LocateRegistry.createRegistry( 5000);
-        localRegistry.bind ("GroupServer", groupServer);
+        localRegistry.bind ("GroupServer", groupServer1);
     }
 }
