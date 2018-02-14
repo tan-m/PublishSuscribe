@@ -10,38 +10,41 @@ import (
   "google.golang.org/api/iterator"
 )
 
+type Client struct {
+    cli *pubsub.Client
+    ctx context.Context
+}
 
-func Join() (c *pubsub.Client, ctx context.Context) {
-  ctx = context.Background()
+func  Join() (client Client) {
+  ctx := context.Background()
   // Sets your Google Cloud Platform project ID.
   projectID := "pubsub-194903"
   // Creates a client.
-  c, err := pubsub.NewClient(ctx, projectID)
+  cli, err := pubsub.NewClient(ctx, projectID)
   if err != nil {
-    log.Fatalf("Failed to create client: %v", err)
+    log.Fatalf("Unable to create a client")
   }
-  return c, ctx
+  return  Client{cli, ctx}
 }
 
-func CreateTopic( c *pubsub.Client,ctx context.Context, 
-         topicName string) (topic *pubsub.Topic, err error) {
+func (client *Client) CreateTopic(topicName string) (topic *pubsub.Topic) {
   // Creates the new topic.
-  topic, err = c.CreateTopic(ctx, topicName)
+  topic, err := client.cli.CreateTopic(client.ctx, topicName)
   if err != nil {
     log.Fatalf("Failed to create topic: %v", err)
   }
   fmt.Println("Successful in creating topic :%v", topic)
-  return topic,err
+  return topic
 }
 
 //Subscribe to one or more topics at the same time
-func Subscribe( c *pubsub.Client,ctx context.Context,
-              topic *pubsub.Topic) (sub *pubsub.Subscription,err error) {
-  ok, err := topic.Exists(ctx)
+func (client *Client) Subscribe(topic *pubsub.Topic) (sub *pubsub.Subscription,
+                                                      err error) {
+  ok, err := topic.Exists(client.ctx)
   if err == nil {
     val := topic.ID()
     fmt.Println("subscribing to ", val)
-    sub,err =  c.CreateSubscription(ctx, val, pubsub.SubscriptionConfig {
+    sub,err =  client.cli.CreateSubscription(client.ctx, val, pubsub.SubscriptionConfig {
                 Topic:topic,AckDeadline: 10 * time.Second,
                 })
   }
@@ -52,18 +55,17 @@ func Subscribe( c *pubsub.Client,ctx context.Context,
 }
 
 //Unsubscribe from one or more topics at the same time 
-func Unsubscribe( c *pubsub.Client,ctx context.Context, 
-                  topic *pubsub.Topic) (err error){
-  _, err = topic.Exists(ctx)
+func (client *Client) Unsubscribe(topic *pubsub.Topic) (err error){
+  _, err = topic.Exists(client.ctx)
   if err != nil {
     log.Fatalf("Topic doesn't exist to unsubscribe")
   }
-  for subs := topic.Subscriptions(ctx) ;; {
+  for subs := topic.Subscriptions(client.ctx) ;; {
     sub, err := subs.Next()
     if err == iterator.Done {
       break
     }
-    if err = sub.Delete(ctx); err == nil {
+    if err = sub.Delete(client.ctx); err == nil {
       fmt.Println("unsubscribing from ",topic.ID())
     }
   }
@@ -71,20 +73,20 @@ func Unsubscribe( c *pubsub.Client,ctx context.Context,
 }
 
 //PUblish message msg to the Subscribers
-func Publish(c *pubsub.Client, ctx context.Context, topic *pubsub.Topic, 
-                        msg string) (err error) {
-  result := topic.Publish(ctx, &pubsub.Message{
+func (client *Client) Publish(topic *pubsub.Topic, msg string) (err error) {
+  result := topic.Publish(client.ctx, &pubsub.Message{
             Data: []byte(msg),
           })
-  id, err := result.Get(ctx)
+  id, err := result.Get(client.ctx)
   fmt.Printf("Published a message; msg ID: %v\n", id)
   return err
 }
 
-func Consume(c *pubsub.Client, ctx context.Context, 
-              sub *pubsub.Subscription) (err error) {
+
+func (client *Client) Consume(sub *pubsub.Subscription) (err error) {
   var mu sync.Mutex
   received := 0
+  ctx := client.ctx
   cctx, cancel := context.WithCancel(ctx)
   err = sub.Receive(cctx, func(ctx context.Context, msg *pubsub.Message) {
     mu.Lock()
@@ -98,5 +100,11 @@ func Consume(c *pubsub.Client, ctx context.Context,
     fmt.Printf("Got message: %q\n", string(msg.Data))
     msg.Ack()
   })
+  return err
+}
+
+//close the client to retrieve all resouces
+func (client *Client) Cleanup() (err error) {
+  err = client.cli.Close()
   return err
 }
