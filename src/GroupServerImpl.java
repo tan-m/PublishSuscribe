@@ -17,23 +17,14 @@ public class GroupServerImpl extends UnicastRemoteObject implements GroupServer 
     private int gsPort;
     private InetAddress address   = null;
     private DatagramSocket socket = null;
-    private DatagramPacket packet = null;
-    private byte[] buf;
     volatile boolean runnable = false;
 
   // Constructor call, creates the Sample Server Port
 
-    protected GroupServerImpl(InetAddress rsHost, int rsPort, int gsPort) throws RemoteException {
+    protected GroupServerImpl(int gsPort) throws RemoteException {
       super();
       this.gsPort = gsPort;
-      try{
-        socket = new DatagramSocket(gsPort);
-        address = InetAddress.getLocalHost();
-        register(rsHost, rsPort);
-      } catch(Exception e) {
-        e.printStackTrace();
-      }
-        executor = Executors.newFixedThreadPool(5);
+      executor = Executors.newFixedThreadPool(5);
     }
 
     @Override
@@ -141,9 +132,17 @@ public class GroupServerImpl extends UnicastRemoteObject implements GroupServer 
    */
   public void register(InetAddress rsHost, int rsPort)
   {
+    try{
+      socket = new DatagramSocket(gsPort);
+      address = InetAddress.getLocalHost();
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    byte buf[];
+    System.out.println("Registering the server with the Registry Server");
     String msg = "Register;RMI;"+address.getHostAddress()+";"+gsPort+";TAG;";
     buf = msg.getBytes();
-    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
+    DatagramPacket packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
     try {
       socket.send(packet);
     } catch (Exception e) {
@@ -168,10 +167,12 @@ public class GroupServerImpl extends UnicastRemoteObject implements GroupServer 
    * Takes a String argument consisting of 
    * “Deregister;RMI;IP;Port”
    */
-  public void deregister(InetAddress rsHost, int rsPort) {
+  public void deregister(InetAddress rsHost, int rsPort) 
+  {
+    byte buf[];
     String msg = "Deregister;RMI;"+address.getHostAddress()+";"+gsPort+";";
     buf = msg.getBytes();
-    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
+    DatagramPacket packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
     try {
       socket.send(packet);
       runnable = false;
@@ -189,9 +190,10 @@ public class GroupServerImpl extends UnicastRemoteObject implements GroupServer 
    */
   public void getList(InetAddress rsHost, int rsPort) 
   { 
+    byte buf[];
     String msg = "GetList;RMI;"+address.getHostAddress()+";"+gsPort;
     buf = msg.getBytes();
-    packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
+    DatagramPacket packet = new DatagramPacket(buf, buf.length, rsHost, rsPort);
     try {
       socket.send(packet);
     } catch (Exception e) {
@@ -217,14 +219,14 @@ public class GroupServerImpl extends UnicastRemoteObject implements GroupServer 
   public void listenHeartBeat() {
     // try receiving data from the server
     while(runnable) {
-      buf = new byte[1024];
+      byte buf[] = new byte[1024];
       try {
         Thread.sleep(3500);
         if (!runnable)
           break;
-        System.out.println("Listen to the heartbeat");
         DatagramPacket request = new DatagramPacket(buf, buf.length);
         socket.receive(request);
+        System.out.println("Listen to the heartbeat ");
         DatagramPacket reply = new DatagramPacket(request.getData(),
                     request.getLength(), request.getAddress(), request.getPort());
         socket.send(reply);

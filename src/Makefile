@@ -10,7 +10,7 @@ CLASSES = \
 	GroupServerImpl.java \
 	StartServer.java \
 	Client.java \
-	UDPServer.java \
+	GroupServerImpl.java \
 	TestClass.java
 
 default: classes

@@ -35,7 +35,7 @@ public class DispatchArticles implements Runnable {
 
         InetAddress address = null;
         for (IP_And_Port subscriber : subscribers) {
-            if (!clientList.contains(subscriber)) continue; // this guy has unsubscribed.
+            if (!clientList.contains(subscriber)) continue;
             try {
                 address = InetAddress.getByName(subscriber.ip);
             } catch (UnknownHostException e) {
