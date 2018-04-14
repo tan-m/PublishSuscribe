@@ -13,6 +13,9 @@ public class ClientPingThread extends Thread {
             try {
                 String str = gs.ping();
                 System.out.println("in ping " + str);
+                if (!str.equals("Hi")) {
+                    break;
+                }
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -23,5 +26,8 @@ public class ClientPingThread extends Thread {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("error!");
+        return;
     }
 }

@@ -1,18 +1,27 @@
+import java.net.Inet4Address;
 import java.rmi.Naming;
 
 public class Client {
-    public static void main (String args[]) {
 
+    public static void main (String args[]) {
         if (args.length != 2) {
-            System.err.println("usage java <ip> <client port>");
+            System.err.println("usage java <rmiregistry ip> <client port>");
         }
+        String rmiRegistryIP =  args[0];
+        int clientPort = Integer.parseInt(args[1]);
+        Client c = new Client();
+        c.startClient(rmiRegistryIP, clientPort);
+
+    }
+
+    void startClient (String rmiRegistryIP, int clientPort) {
 
         try {
             // host/args[0] is the registry location
-            GroupServer gs = (GroupServer) Naming.lookup ("//"+ args[0] + ":5000" + "/GroupServer");
+            GroupServer gs = (GroupServer) Naming.lookup ("//"+ rmiRegistryIP + ":5000" + "/GroupServer");
 
-            String ip = "127.0.0.1";
-            int port = Integer.parseInt(args[1]);
+            String ip = Inet4Address.getLocalHost().getHostAddress();
+            int port = clientPort;
 
             new ClientReceiveSubscription(port).start();
 
